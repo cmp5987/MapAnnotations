@@ -18,6 +18,10 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        //we can implement delegate protocol
+        mapView.delegate = self
+        
         // Do any additional setup after loading the view.
         configureLocationService()
     }
@@ -52,6 +56,22 @@ class ViewController: UIViewController {
         
     }
 
+    private func addAnnotations(){
+        
+        //initialized them
+        let appleParkAnnotation = MKPointAnnotation()
+        appleParkAnnotation.title = "Apple Park"
+        appleParkAnnotation.coordinate = CLLocationCoordinate2D(latitude: 37.3327, longitude: -122.0053)
+        
+        let ortegaParkAnnotation = MKPointAnnotation()
+        ortegaParkAnnotation.title = "Ortega Park"
+        ortegaParkAnnotation.coordinate = CLLocationCoordinate2D(latitude: 37.3422, longitude: -122.0256)
+        
+        //now we add them
+        mapView.addAnnotation(appleParkAnnotation)
+        mapView.addAnnotation(ortegaParkAnnotation)
+    }
+    
 }
 
 extension ViewController: CLLocationManagerDelegate {
@@ -63,6 +83,7 @@ extension ViewController: CLLocationManagerDelegate {
         
         if currentCoordinate == nil {
             zoomToLatestLocation(with: latestLocation.coordinate)
+            addAnnotations()
         }
         
         currentCoordinate = latestLocation.coordinate
@@ -75,5 +96,44 @@ extension ViewController: CLLocationManagerDelegate {
         if status == .authorizedAlways || status == .authorizedWhenInUse{
             beginLocationUpdates(locationManager: manager)
         }
+    }
+}
+extension ViewController: MKMapViewDelegate{
+    //derives from UIView so we can use those
+    //like image property
+    
+    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+        
+        var annotationView =  mapView.dequeueReusableAnnotationView(withIdentifier: "AnnotationView")
+        
+        if annotationView ==  nil {
+            annotationView  = MKAnnotationView(annotation: annotation, reuseIdentifier: "AnnotationView")
+        }
+        
+        if let title = annotation.title, title == "Apple Park" || title == "Ortega Park"{
+            let  pinImage = UIImage(named: "pin")
+            let size = CGSize(width: 40, height: 40)
+            UIGraphicsBeginImageContext(size)
+            pinImage!.draw(in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
+            let resizedImage = UIGraphicsGetImageFromCurrentImageContext()
+            
+            annotationView?.image = resizedImage
+            
+        }
+        else{
+            return nil
+        }
+        //else{
+        //    annotationView?.image = UIImage(named: "pin")
+        //}
+        //User location can be refered to as mapView.userLocation
+        
+        annotationView?.canShowCallout = true
+        
+        return annotationView
+    }
+    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        //will work with if they are selected
+        print("Annotation was selected \(view.annotation?.title)")
     }
 }
